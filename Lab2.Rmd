@@ -1,0 +1,69 @@
+---
+title: 'Lab 2: Simulating Synthetic Data and Assessing Multivariate Normality Assumption'
+author: "Catarina Loureiro & M. Rosário Oliveira - Multivariate Analysis (LMAC/MECD/MMAC/Minor-CD)"
+date: "`r format(Sys.time(), '%B %Y')`"
+output:
+  html_document:
+    toc: true
+    df_print: paged
+  pdf_document:
+    toc: true
+    number_sections: true
+    fig_width: 7
+    fig_height: 6
+    fig_caption: true
+    extra_dependencies:
+      caption: labelfont={bf}
+      hyperref: null
+      xcolor: null
+---
+
+------------------------------------------------------------------------
+
+Report your answers to the following questions in an R Markdown file. Submit your answers by the 9th of October 2024, 23:59, on the Fénix webpage.
+
+Add your group number and the students' name and number of its members in the file:
+
+-   **Group Number:**
+
+-   **Name and Number - Group Member 1:**
+
+-   **Name and Number - Group Member 2:**
+
+------------------------------------------------------------------------
+
+### Exercise 1: Simulating Synthetic Data from a Multivariate Normal Distribution
+
+Consider that you can only generate data from an univariate standard normal distribution. Write an `R` function to generate data from a multivariate normal distribution given a mean vector and a covariance matrix.
+
+------------------------------------------------------------------------
+
+### Exercise 2: Assessing Multivariate Normality Assumption
+
+Write an `R` function that implements the two graphical tools discussed in classroom to assess the multivariate normality assumption.
+
+**Note:** See document entitled "*Ch 2 - Multivariate normal, multinomial distribution, and statistical inference based on these distributions*" (Q-Q plot algorithm and Chi-squared plot).
+
+------------------------------------------------------------------------
+
+### Exercise 3: Simulation Study with Clean Data
+
+Using the function you defined in Exercise 1, simulate $m=500$ samples of size $n$ from a multivariate normal distribution. Choose values for the mean vector $\boldsymbol{\mu}_0$, the covariance matrix $\boldsymbol{\Sigma}_0$, and the number $n$ of observations.
+
+For each generated sample, apply the two graphical tools implemented in Exercise 2. Fit a univariate linear regression and record the associated coefficient of determination, $R^2$, from each sample. Compute the mean and standard deviation of the recorded $R^2$ values across all samples.
+
+Provide the plots for each graphical tool from at least one sample. What do you conclude about the quality of the implemented graphical tools?
+
+------------------------------------------------------------------------
+
+### Exercise 4: Simulation Study with Contaminated Data
+
+Repeat Exercise 3, but now introduce contamination by adding 10% of observations from a multivariate normal distribution with a mean vector $\boldsymbol{\mu}_1=\boldsymbol{\mu}_0+5$ and the same covariance matrix $\boldsymbol{\Sigma}_0$.
+
+What do you conclude about the multivariate normality assumption for your new simulation setting?
+
+------------------------------------------------------------------------
+
+### Exercise 5: Real Dataset
+
+Consider a dataset of your own choice and investigate the normality assumption. Use Q-Q plots and other tools to discuss the normality assumption of your dataset.

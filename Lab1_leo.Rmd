@@ -1,0 +1,546 @@
+---
+title: 'Lab 1: Data Visualization, Expected Value and Covariance Properties'
+author: "Catarina Loureiro & M. Rosário Oliveira - Multivariate Analysis (LMAC/MECD/MMAC/Minor-CD)"
+date: "`r format(Sys.time(), '%B %Y')`"
+output:
+  html_document:
+    toc: true
+    df_print: paged
+  pdf_document:
+    toc: true
+    number_sections: true
+    fig_width: 7
+    fig_height: 6
+    fig_caption: true
+    extra_dependencies:
+      caption: labelfont={bf}
+      hyperref: null
+      xcolor: null
+---
+
+List of useful `R` libraries:
+
+```{r message=FALSE, warning=FALSE}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(psych)
+library(car)
+library(GGally)
+library(mvtnorm)
+library(kableExtra)
+library(robustbase)
+library(rrcov)
+library(knitr)
+library(plotrix)
+library(RColorBrewer)
+library(MASS)
+library(corrplot)
+```
+
+## Example: Exploratory Data Analysis
+
+The `iris` dataset is available in `R` and contains measurements on 4 different attributes for 50 flowers from 3 different species. For more information on this dataset see: <https://archive.ics.uci.edu/dataset/53/iris>.
+
+### 1. Basic Summary Statistics
+
+```{r}
+data("iris")
+head(iris)
+```
+
+```{r}
+summary(iris)
+```
+
+```{r}
+describe(iris)
+```
+
+```{r}
+describeBy(iris[,1:4], group=iris$Species)
+```
+
+```{r}
+table(iris$Species)
+```
+
+```{r}
+round(table(iris$Species)/length(iris$Species),3)
+```
+
+```{r}
+round(quantile(iris[,1],probs = seq(0,1,0.2)),3)
+```
+
+### 2. Association Among Variables
+
+```{r}
+round(var(iris[,1:4]),3)
+```
+
+```{r}
+round(cov(iris[,1:4]),3)
+```
+
+```{r}
+round(cor(iris[,1:4]),3)
+```
+
+### 3. Data Visualization
+
+Usually, problems are characterized by a high (huge) number of variables or features, and humans live in three dimensions. The challenge is to find a meaningful representation of the data that reveals interesting patterns, existing in the data.
+
+See The R Graph Gallery in <https://www.r-graph-gallery.com/> or the R CHARTS in <https://r-charts.com/>. You can check more information about the R Graph Gallery in <https://bookdown.org/content/b298e479-b1ab-49fa-b83d-a57c2b034d49/>.
+
+#### 3.1 Univariate Data: Qualitative Variables
+
+```{r}
+# 3D Exploded Pie Chart
+library(plotrix)
+
+pie3D(as.vector(table(iris$Species)),labels=unique(iris$Species),explode=0.1,main="Iris Species",labelcex=1.0)
+```
+
+```{r}
+# Pie Chart with Percentages
+slices <- as.vector(table(iris$Species))
+lbls <- names(table(iris$Species))
+pct <- round(slices/sum(slices)*100)
+lbls <- paste(lbls, pct) # add percents to labels
+lbls <- paste(lbls,"%",sep="") # ad % to labels
+pie(slices,labels = lbls, col=rainbow(length(lbls)),main="Iris Species")
+```
+
+#### 3.2 Univariate Data: Quantitative Variables
+
+```{r}
+boxplot(iris[,1:4],col=4,prob=TRUE,xlab="Iris Characteristics")
+```
+
+```{r}
+ggplot(iris, aes(x=Sepal.Length, y=Sepal.Width, fill=Species)) +
+geom_boxplot(alpha=0.3) + theme(legend.position="none")
+```
+
+```{r}
+hist(iris$Sepal.Length,prob=TRUE,xlab="Sepal Length (cm)",main="Histogram: Iris Dataset")
+```
+
+```{r}
+ggplot(iris, aes(x=Sepal.Length)) + 
+geom_histogram( fill="#69b3a2", color="#e9ecef", alpha=0.9) +
+ggtitle("Default option for the number of bins") +
+theme(plot.title = element_text(size=15))
+```
+
+```{r}
+k<-floor(1+log(nrow(iris))/log(2))
+delta<-(range(iris$Sepal.Length)[2]-range(iris$Sepal.Length)[1])/k
+
+ggplot(iris, aes(x=Sepal.Length)) + 
+geom_histogram( binwidth=delta, fill="#69b3a2", color="#e9ecef", alpha=0.9) +
+ggtitle("Equal width - Sturges Rule") +
+theme(plot.title = element_text(size=15))
+```
+
+```{r}
+plot(density(iris$Sepal.Length), main="Sepal Length (cm)")
+```
+
+```{r}
+ggplot(iris, aes(x=Sepal.Length)) +
+geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8) +
+xlim(3,9) + ggtitle("Sepal Length (cm) - ggplot")
+```
+
+```{r}
+qqPlot(iris$Sepal.Length,distribution = "norm",main="Quantile-quantile Plot",pch=20,col="red")
+```
+
+#### 3.3 Bivariate Data and Correlations
+
+```{r}
+pairs(iris[,1:4],col=(iris$Species),pch=19)
+```
+
+```{r}
+pairs.panels(iris[,1:4], smooth = FALSE, scale = FALSE, density=TRUE,ellipses=FALSE,digits=2)
+```
+
+```{r}
+ggpairs(iris[,1:4], title="Correlogram with ggpairs()")
+```
+
+```{r}
+ggpairs(iris[,1:4], columns = 1:4, ggplot2::aes(colour=iris$Species))
+```
+
+```{r}
+ggcorr(iris[,1:4], method = c("everything", "pearson"))
+```
+
+```{r}
+require(corrplot)
+corrplot.mixed(cor(iris[,1:4]))
+```
+
+------------------------------------------------------------------------
+
+## Lab 1: Data Visualization, Expected Value and Covariance Properties
+
+Report your answers to the following questions in an R Markedown file. Submit your answers by the 25th of September 2024, 23:59, on the Fénix webpage.
+
+Add your group number and the students' name and number of its members in the file:
+
+-   **Group Number: 3**
+
+-   **Name and Number - Group Member 1:**
+
+    |        |                           |
+    |--------|---------------------------|
+    | 105545 | Emma Rose Dennis-Knieriem |
+
+-   **Name and Number - Group Member 2:**
+
+    |        |                       |
+    |--------|-----------------------|
+    | 104694 | Leonardo Yundi Aikawa |
+
+------------------------------------------------------------------------
+
+### Exercise 1: Data Visualization
+
+Consider the `crabs` dataset available from the `MASS` library. Based on the example above, do your exploratory analysis and visualization of this dataset. For each output, add an interpretation of the obtained results.
+
+```{r message=FALSE, warning=FALSE}
+require(MASS)
+?crabs
+```
+
+```{r}
+data("crabs")
+head(crabs)
+```
+
+The table ahead shows the first rows of the dataset showing us a little overview of what the dataset have to offer
+
+```{r}
+# Summary of the variables in the crabs dataset
+summary(crabs)
+```
+
+```{r}
+# Descriptive statistics of the variables in the crabs dataset
+describe(crabs)
+```
+
+```{r}
+# Descriptive statistics by group (species)
+describeBy(crabs[,2:8], group=crabs$sp)
+```
+
+```{r}
+# Frequency table for crab species and proportion of each species in the dataset
+table(crabs$sp)
+round(table(crabs$sp)/length(crabs$sp),3)
+```
+
+```{r}
+# Quantiles for the first variable (FL - frontal lobe length)
+round(quantile(crabs$FL, probs = seq(0, 1, 0.25)), 3)
+```
+
+```{r}
+# Variance matrix for the continuous variables
+round(var(crabs[, 4:8]), 3)
+```
+
+The variance matrix provides the variance of each variable. In the crabs dataset, this would be the variance of measurements like front lobe length (FL), rear width, carapace length, and other morphological variables.
+
+-   **Interpretation**: High variance indicates that the values of a variable are widely spread out from the mean, while low variance suggests that the values are more tightly clustered around the mean. Each variable’s variance is located on the diagonal of the variance matrix.
+
+```{r}
+# Covariance matrix for the continuous variables
+round(cov(crabs[, 4:8]), 3)
+```
+
+Covariance measures how two variables vary together. If both variables increase or decrease simultaneously, the covariance is positive; if one increases while the other decreases, the covariance is negative.
+
+-   **Interpretation**: In the `crabs` dataset, the covariance matrix would show the relationship between each pair of variables. For example, if the front lobe length (FL) increases as the rear width increases, you will see a positive covariance between these variables.
+
+```{r}
+# Correlation matrix for the continuous variables
+round(cor(crabs[, 4:8]), 3)
+```
+
+The correlation matrix normalizes covariance values between -1 and 1, giving a clearer indication of the strength and direction of the linear relationship between variables.
+
+-   **Interpretation**: In the `crabs` dataset, a correlation near 1 indicates that two variables are strongly positively correlated (i.e., as one increases, the other also increases), while a correlation near -1 indicates a strong negative correlation (as one increases, the other decreases). A correlation close to 0 means no linear relationship.
+
+```{r}
+# Visualization: Scatterplot matrix of the variables
+pairs(crabs[, 4:8], main = "Scatterplot Matrix for Crabs Dataset",
+      col = c("blue", "orange")[crabs$sp])
+```
+
+The scatterplot matrix shows pairwise scatterplots of the variables. Each plot shows how two variables relate to each other visually.
+
+-   **Interpretation**: The scatterplot matrix allows for a quick visual examination of relationships between variables. Positive correlations will show as upward-sloping patterns, and negative correlations as downward-sloping patterns. Non-linear relationships can also be spotted here.
+
+```{r}
+# Visualization: Correlation plot
+corrplot(cor(crabs[, 4:8]), method = "circle", tl.col = "black", tl.cex = 0.8)
+```
+
+The correlation plot uses a color-coded matrix to represent the correlation values, where circles represent correlations. Larger, darker circles indicate stronger correlations, either positive (blue) or negative (red).
+
+-   **Interpretation**: Strong positive correlations will be represented by larger blue circles, and strong negative correlations by larger red circles. Small or faint circles indicate weak or no correlation.
+
+```{r}
+# Visualization: Boxplot to compare species
+boxplot(crabs$FL ~ crabs$sp, main = "Front Limb Length by Species",
+        xlab = "Species", ylab = "Front Limb Length")
+```
+
+The boxplot compares the distributions of a variable (in this case, front lobe length) across different groups (species).
+
+-   **Interpretation**: A boxplot visually shows the median, interquartile range (IQR), and potential outliers of a variable for each group. If the boxes between groups do not overlap much, this suggests a significant difference in the median values between species.
+
+```{r}
+# Visualization: Histogram of the continuous variables
+hist(crabs$FL, main = "Histogram of Front Limb Length", xlab = "Front Limb Length", col = "lightblue")
+```
+
+### General Observations for `crabs` dataset:
+
+-   **Strong correlations between variables**: You might expect to see high correlations between certain morphological features, such as lengths and widths of the crabs, as these measurements are likely to scale together.
+
+-   **Species differences**: The boxplot can help in determining if there are clear morphological differences between the species of crabs. If one species consistently has larger features (like longer front lobes), this will be reflected in the boxplots and in the summary statistics.
+
+-   **Patterns in scatterplots**: The scatterplot matrix will give insight into whether the relationships between different variables (e.g., front lobe length and rear width) are linear or if any non-linear patterns exist.
+
+------------------------------------------------------------------------
+
+### Exercise 2: Expected Value and Covariance Properties
+
+Let $\boldsymbol{X}$ and $\boldsymbol{Y}$ be $p$-variate random variables. Assume $\boldsymbol{a}$ and $\boldsymbol{b}$ are constant $p$-dimensional vectors, and $\boldsymbol{A}$ and $\boldsymbol{B}$ are constant matrices of appropriate dimensions. Set $\mathbb{E}(\boldsymbol{X})=\boldsymbol{\mu}$, $\mathbb{E}(\boldsymbol{Y})=\boldsymbol{\nu}$, and $\text{Var}(\boldsymbol{X})=\boldsymbol{\Sigma}$.
+
+**1.** Demonstrate the following property:
+
+$$\text{Cov}(\boldsymbol{AX},\boldsymbol{BX})=\boldsymbol{A\Sigma B^\top}.$$
+
+Recall that for two random vectors $\boldsymbol{X}$ and $\boldsymbol{Y}$, the covariance is defined as:
+
+$\text{Cov}(\boldsymbol{X}, \boldsymbol{Y}) = \mathbb{E}[(\boldsymbol{X} - \mathbb{E}(\boldsymbol{X}))(\boldsymbol{Y} - \mathbb{E}(\boldsymbol{Y}))^\top].$
+
+For simplicity, assume that $\boldsymbol{X}$ has expected value $\mathbb{E}(\boldsymbol{X}) = \boldsymbol{\mu}$, and that $\boldsymbol{X}$ and $\boldsymbol{Y}$ are related in terms of linear transformations by matrices $\boldsymbol{A}$ and $\boldsymbol{B}$, respectively.
+
+We need to find the covariance of the transformed random vectors $\boldsymbol{AX}$ and $\boldsymbol{BX}$.
+
+Using the definition of covariance for these transformed variables:
+
+$\text{Cov}(\boldsymbol{AX}, \boldsymbol{BX}) = \mathbb{E}[(\boldsymbol{AX} - \mathbb{E}(\boldsymbol{AX}))(\boldsymbol{BX} - \mathbb{E}(\boldsymbol{BX}))^\top].$
+
+Since $\boldsymbol{A}$ and $\boldsymbol{B}$ are constant matrices, we can apply the following properties of expectations and covariances:
+
+-   $\mathbb{E}(\boldsymbol{AX}) = \boldsymbol{A} \mathbb{E}(\boldsymbol{X}) = \boldsymbol{A\mu}$,
+
+-   $\mathbb{E}(\boldsymbol{BX}) = \boldsymbol{B} \mathbb{E}(\boldsymbol{X}) = \boldsymbol{B\nu}$,
+
+-   and linearity of expectation allows us to factor out $\boldsymbol{A}$ and $\boldsymbol{B}$.
+
+Thus:
+
+$\text{Cov}(\boldsymbol{AX}, \boldsymbol{BX}) = \mathbb{E}[\boldsymbol{A}(\boldsymbol{X} - \boldsymbol{\mu})(\boldsymbol{X} - \boldsymbol{\mu})^\top \boldsymbol{B}^\top]$.
+
+We can now factor out the constant matrices $\boldsymbol{A}$ and $\boldsymbol{B}^\top$ from the expectation since they are not random variables:
+
+$\text{Cov}(\boldsymbol{AX}, \boldsymbol{BX}) = \boldsymbol{A} \mathbb{E}[(\boldsymbol{X} - \boldsymbol{\mu})(\boldsymbol{X} - \boldsymbol{\mu})^\top] \boldsymbol{B}^\top$.
+
+By definition, the covariance matrix of $\boldsymbol{X}$ is:
+
+$\text{Var}(\boldsymbol{X}) = \mathbb{E}[(\boldsymbol{X} - \boldsymbol{\mu})(\boldsymbol{X} - \boldsymbol{\mu})^\top] = \boldsymbol{\Sigma}$.
+
+Substituting $\text{Var}(\boldsymbol{X}) = \boldsymbol{\Sigma}$ into the equation, we get:
+
+$\text{Cov}(\boldsymbol{AX}, \boldsymbol{BX}) = \boldsymbol{A\Sigma B^\top}$.
+
+This completes the demonstration. The covariance of the linear transformations $\boldsymbol{AX}$ and $\boldsymbol{BX}$ is given by $\boldsymbol{A\Sigma B^\top}$, where $\boldsymbol{\Sigma}$ is the covariance matrix of $\boldsymbol{X}$.
+
+**2.** Using the `crabs` dataset from the previous exercise and assigning values to $\boldsymbol{a}$, $\boldsymbol{b}$, $\boldsymbol{A}$ and $\boldsymbol{B}$, design examples that illustrate the following properties:
+
+**Notes:** Consider $p=5$, using the numerical variables of your dataset.
+
+Clearly state your chosen values for $\boldsymbol{a}$, $\boldsymbol{b}$, $\boldsymbol{A}$ and $\boldsymbol{B}$.
+
+Matrix multiplication in `R` can be done using the `%*%` operator.
+
+```{r}
+# Load the crabs dataset and necessary packages
+library(MASS)
+data("crabs")
+
+# Select the last 5 columns (FL, RW, CL, CW, BD)
+X <- as.matrix(crabs[, 4:8])
+
+# Mean vector (mu) and Covariance matrix (Sigma)
+mu <- colMeans(X)
+Sigma <- cov(X)
+
+# Define vectors a and b, and matrices A and B
+a <- c(1, 0.5, -0.5, 1.5, -1)
+b <- c(0.5, -0.5, 1, 1, -1)
+A <- matrix(c(1, 0, 0.5, -0.5, 1,
+              0.5, 1, 0, 1.5, 0,
+              1.5, 0.5, -1, 0, 1,
+              -0.5, 1, 0, 0.5, -1,
+              1, -0.5, 1, -1, 0.5), nrow = 5, byrow = TRUE)
+B <- matrix(c(0.5, -1, 0.5, 1, 0.5,
+              -1, 0.5, -0.5, 1, -0.5,
+              1, -0.5, 0.5, -1, 0,
+              0.5, 0, -1, 1, 0.5,
+              0, 1, -1, 0.5, -0.5), nrow = 5, byrow = TRUE)
+
+```
+
+**(a)** $\mathbb{E}(\boldsymbol{a}^\top\boldsymbol{X})=\boldsymbol{a}^\top\boldsymbol{\mu}$
+
+```{r}
+# Left-hand side
+lhs_a <- t(a) %*% colMeans(X)
+
+# Right-hand side
+rhs_a <- t(a) %*% mu
+
+lhs_a == rhs_a  # Check if equal
+```
+
+**(b)** $\text{Var}(\boldsymbol{a}^\top\boldsymbol{X})=\boldsymbol{a}^\top\boldsymbol{\Sigma}\boldsymbol{a}$
+
+```{r}
+# Variance of a^T X
+var_a_X <- t(a) %*% Sigma %*% a
+var_a_X
+```
+
+**(c)** $\text{Cov}(\boldsymbol{a^\top X},\boldsymbol{b^\top X})=\boldsymbol{a^\top\Sigma b}$
+
+```{r}
+# Covariance of a^T X and b^T X
+cov_a_b_X <- t(a) %*% Sigma %*% b
+cov_a_b_X
+```
+
+**(d)** $\text{Cor}(\boldsymbol{a^\top X},\boldsymbol{b^\top X})=\frac{\boldsymbol{a^\top\Sigma b}}{\sqrt{(\boldsymbol{a^\top\Sigma a})(\boldsymbol{b^\top\Sigma b})}}$
+
+```{r}
+# Correlation of a^T X and b^T X
+cor_a_b_X <- cov_a_b_X / sqrt((t(a) %*% Sigma %*% a) * (t(b) %*% Sigma %*% b))
+cor_a_b_X
+
+```
+
+**(e)** $\mathbb{E}(\boldsymbol{AX+b})=\boldsymbol{A\mu+b}$
+
+```{r}
+# Expectation of AX + b
+E_AX_b <- A %*% mu + b
+E_AX_b
+
+```
+
+**(f)** $\text{Var}(\boldsymbol{AX})=\boldsymbol{A\Sigma A}^\top$
+
+```{r}
+# Variance of AX
+Var_AX <- A %*% Sigma %*% t(A)
+Var_AX
+
+```
+
+**(g)** $\text{Cov}(\boldsymbol{X},\boldsymbol{Y})=\mathbb{E}((\boldsymbol{X-\mu})(\boldsymbol{Y-\nu})^\top)=\mathbb{E}(\boldsymbol{XY}^\top)-\boldsymbol{\mu\nu}^\top$
+
+```{r}
+# Select another subset of the crabs dataset to represent Y
+Y <- as.matrix(crabs[, 4:8])
+
+# Mean vector for Y
+nu <- colMeans(Y)
+
+# Covariance between X and Y
+cov_XY <- cov(X, Y)
+cov_XY_alternative <- (t(X) %*% Y) - mu %*% t(nu)
+
+# Both should give similar results
+cov_XY
+cov_XY_alternative
+
+```
+
+**(h)** $\text{Cov}(\boldsymbol{X},\boldsymbol{Y})=\text{Cov}(\boldsymbol{Y},\boldsymbol{X})^\top$
+
+```{r}
+# Covariance of Y and X
+cov_YX <- cov(Y, X)
+
+# Check if cov(X, Y) equals cov(Y, X)'s transpose
+cov_YX_T <- t(cov_YX)
+all.equal(cov_XY, cov_YX_T)  # Should return TRUE
+
+```
+
+**(i)** $\text{Cov}(\boldsymbol{X}_1+\boldsymbol{X}_2,\boldsymbol{Y})=\text{Cov}(\boldsymbol{X}_1,\boldsymbol{Y})+\text{Cov}(\boldsymbol{X}_2,\boldsymbol{Y})$
+
+```{r}
+
+# Split X into two parts X1 and X2
+X1 <- X[, 1:3]
+X2 <- X[, 3:5]
+
+# Covariance of (X1 + X2) and Y
+cov_X1_X2_Y <- cov(X1 + X2, Y)
+
+# Covariance of X1 and Y, and X2 and Y, separately
+cov_X1_Y <- cov(X1, Y)
+cov_X2_Y <- cov(X2, Y)
+
+# Verify the additive property
+cov_X1_X2_Y == (cov_X1_Y + cov_X2_Y)
+
+```
+
+**(j)** $\text{Var}(\boldsymbol{X+Y})=\text{Var}(\boldsymbol{X})+\text{Var}(\boldsymbol{Y})+\text{Cov}(\boldsymbol{X},\boldsymbol{Y})+\text{Cov}(\boldsymbol{Y},\boldsymbol{X})$
+
+```{r}
+# Variance of (X + Y)
+var_X_Y <- var(X + Y)
+
+# Individual variances and covariances
+var_X <- var(X)
+var_Y <- var(Y)
+cov_XY <- cov(X, Y)
+cov_YX <- cov(Y, X)
+
+# Verify the variance equation
+var_X_Y == (var_X + var_Y + cov_XY + cov_YX)
+
+```
+
+**(k)** $\text{Cov}(\boldsymbol{AX},\boldsymbol{BX})=\boldsymbol{A\Sigma B^\top}$
+
+```{r}
+# Covariance of AX and BX
+cov_AX_BX <- A %*% Sigma %*% t(B)
+cov_AX_BX
+
+```
+
+**(l)** $\text{Cov}(\boldsymbol{AX},\boldsymbol{BY})=\boldsymbol{A}\text{Cov}(\boldsymbol{X},\boldsymbol{Y})\boldsymbol{B}^\top$
+
+```{r}
+# Covariance of AX and BY
+cov_AX_BY <- A %*% cov(X, Y) %*% t(B)
+cov_AX_BY
+
+```

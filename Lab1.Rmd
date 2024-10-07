@@ -1,0 +1,414 @@
+---
+title: 'Lab 1: Data Visualization, Expected Value and Covariance Properties'
+author: "Catarina Loureiro & M. Rosário Oliveira - Multivariate Analysis (LMAC/MECD/MMAC/Minor-CD)"
+date: "`r format(Sys.time(), '%B %Y')`"
+output:
+  pdf_document:
+    toc: true
+    number_sections: true
+    fig_width: 7
+    fig_height: 6
+    fig_caption: true
+    extra_dependencies:
+      caption: labelfont={bf}
+      hyperref: null
+      xcolor: null
+  html_document:
+    toc: true
+    df_print: paged
+---
+
+List of useful `R` libraries:
+
+```{r message=FALSE, warning=FALSE}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(psych)
+library(car)
+library(GGally)
+library(mvtnorm)
+library(kableExtra)
+library(robustbase)
+library(rrcov)
+library(knitr)
+library(plotrix)
+library(RColorBrewer)
+library(MASS)
+library(corrplot)
+```
+
+## Example: Exploratory Data Analysis
+
+The `iris` dataset is available in `R` and contains measurements on 4 different attributes for 50 flowers from 3 different species. For more information on this dataset see: <https://archive.ics.uci.edu/dataset/53/iris>.
+
+### 1. Basic Summary Statistics
+
+```{r}
+data("iris")
+head(iris)
+```
+
+```{r}
+summary(iris)
+```
+
+```{r}
+describe(iris)
+```
+
+```{r}
+describeBy(iris[,1:4], group=iris$Species)
+```
+
+```{r}
+table(iris$Species)
+```
+
+```{r}
+round(table(iris$Species)/length(iris$Species),3)
+```
+
+```{r}
+round(quantile(iris[,1],probs = seq(0,1,0.2)),3)
+```
+
+### 2. Association Among Variables
+
+```{r}
+round(var(iris[,1:4]),3)
+```
+
+```{r}
+round(cov(iris[,1:4]),3)
+```
+
+```{r}
+round(cor(iris[,1:4]),3)
+```
+
+### 3. Data Visualization
+
+Usually, problems are characterized by a high (huge) number of variables or features, and humans live in three dimensions. The challenge is to find a meaningful representation of the data that reveals interesting patterns, existing in the data.
+
+See The R Graph Gallery in <https://www.r-graph-gallery.com/> or the R CHARTS in <https://r-charts.com/>. You can check more information about the R Graph Gallery in <https://bookdown.org/content/b298e479-b1ab-49fa-b83d-a57c2b034d49/>.
+
+#### 3.1 Univariate Data: Qualitative Variables
+
+```{r}
+# 3D Exploded Pie Chart
+library(plotrix)
+
+pie3D(as.vector(table(iris$Species)),labels=unique(iris$Species),explode=0.1,main="Iris Species",labelcex=1.0)
+```
+
+```{r}
+# Pie Chart with Percentages
+slices <- as.vector(table(iris$Species))
+lbls <- names(table(iris$Species))
+pct <- round(slices/sum(slices)*100)
+lbls <- paste(lbls, pct) # add percents to labels
+lbls <- paste(lbls,"%",sep="") # ad % to labels
+pie(slices,labels = lbls, col=rainbow(length(lbls)),main="Iris Species")
+```
+
+#### 3.2 Univariate Data: Quantitative Variables
+
+```{r}
+boxplot(iris[,1:4],col=4,prob=TRUE,xlab="Iris Characteristics")
+```
+
+```{r}
+ggplot(iris, aes(x=Sepal.Length, y=Sepal.Width, fill=Species)) +
+geom_boxplot(alpha=0.3) + theme(legend.position="none")
+```
+
+```{r}
+hist(iris$Sepal.Length,prob=TRUE,xlab="Sepal Length (cm)",main="Histogram: Iris Dataset")
+```
+
+```{r}
+ggplot(iris, aes(x=Sepal.Length)) + 
+geom_histogram( fill="#69b3a2", color="#e9ecef", alpha=0.9) +
+ggtitle("Default option for the number of bins") +
+theme(plot.title = element_text(size=15))
+```
+
+```{r}
+k<-floor(1+log(nrow(iris))/log(2))
+delta<-(range(iris$Sepal.Length)[2]-range(iris$Sepal.Length)[1])/k
+
+ggplot(iris, aes(x=Sepal.Length)) + 
+geom_histogram( binwidth=delta, fill="#69b3a2", color="#e9ecef", alpha=0.9) +
+ggtitle("Equal width - Sturges Rule") +
+theme(plot.title = element_text(size=15))
+```
+
+```{r}
+plot(density(iris$Sepal.Length), main="Sepal Length (cm)")
+```
+
+```{r}
+ggplot(iris, aes(x=Sepal.Length)) +
+geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8) +
+xlim(3,9) + ggtitle("Sepal Length (cm) - ggplot")
+```
+
+```{r}
+qqPlot(iris$Sepal.Length,distribution = "norm",main="Quantile-quantile Plot",pch=20,col="red")
+```
+
+#### 3.3 Bivariate Data and Correlations
+
+```{r}
+pairs(iris[,1:4],col=(iris$Species),pch=19)
+```
+
+```{r}
+pairs.panels(iris[,1:4], smooth = FALSE, scale = FALSE, density=TRUE,ellipses=FALSE,digits=2)
+```
+
+```{r}
+ggpairs(iris[,1:4], title="Correlogram with ggpairs()")
+```
+
+```{r}
+ggpairs(iris[,1:4], columns = 1:4, ggplot2::aes(colour=iris$Species))
+```
+
+```{r}
+ggcorr(iris[,1:4], method = c("everything", "pearson"))
+```
+
+```{r}
+require(corrplot)
+corrplot.mixed(cor(iris[,1:4]))
+```
+
+------------------------------------------------------------------------
+
+## Lab 1: Data Visualization, Expected Value and Covariance Properties
+
+Report your answers to the following questions in an R Markedown file. Submit your answers by the 25th of September 2024, 23:59, on the Fénix webpage.
+
+Add your group number and the students' name and number of its members in the file:
+
+-   **Group Number: 22**
+
+-   **Name and Number - Group Member: Antonio Vitor Villas Boas | 105429**
+
+------------------------------------------------------------------------
+
+### Exercise 1: Data Visualization
+
+Consider the `crabs` dataset available from the `MASS` library. Based on the example above, do your exploratory analysis and visualization of this dataset. For each output, add an interpretation of the obtained results.
+
+```{r message=FALSE, warning=FALSE}
+require(MASS)
+#?crabs
+head(crabs)
+```
+
+```{r}
+summary(crabs)
+```
+```{r}
+describe(crabs)
+```
+```{r}
+table(crabs$sp, crabs$sex)
+```
+
+```{r}
+describeBy(crabs, list(crabs$sp, crabs$sex))
+```
+On average, blue female crabs tend to have slightly smaller frontal lobes (FL mean = 13.27) and body depths (BD mean = 11.82) compared to the other groups. Their measurements show less variability, as indicated by smaller standard deviations.
+
+```{r}
+round(cov(crabs[,4:8]),3)
+round(cor(crabs[,4:8]),3)
+```
+
+Both covariance and correlation show that Carapace Length (CL) and Carapace Width (CW) are the most strongly related in the dataset. The covariance is high (55.761), and the correlation is nearly perfect (0.995), indicating that larger carapace length is almost always accompanied by larger carapace width. This implies that these two body dimensions scale together almost linearly as the crabs grow.
+
+The frontal lobe (FL) has very high correlations with all other variables (all above 0.90), especially with body depth (BD at 0.988) and carapace length (CL at 0.979). The covariance values (e.g., 24.357 for FL and CL, 26.551 for FL and CW) are also high, confirming that larger frontal lobes are strongly associated with larger overall body size, particularly longer and wider carapaces.
+
+Although rear width (RW) still shows strong correlations with other variables, especially with frontal lobe width (0.907) and carapace width (0.900), it has relatively lower covariance and correlation compared to other relationships. This suggests that rear width is less tightly linked to overall crab size compared to carapace measurements, even though larger crabs generally still have wider rear widths.
+
+the correlation matrix provides a clearer view of the strength of the linear relationships between variables, while the covariance matrix shows the magnitude of these relationships. Both metrics confirm that carapace length, width, and frontal lobe dimensions are the key indicators of crab size, with rear width playing a somewhat less critical role.
+
+```{r}
+# Create a boxplot for Carapace Length (CL) by species and sex
+boxplot(crabs$CL ~ crabs$sp * crabs$sex,
+        main = "Carapace Length by Species and Sex",
+        xlab = "Species and Sex",
+        ylab = "Carapace Length",
+        names = c("Blue Male", "Blue Female", "Orange Male", "Orange Female"),
+        col = c("lightblue", "lightpink", "orange", "lightgreen"))
+
+```
+These results suggest that species and sex are important factors in determining the carapace length of crabs, with Orange crabs generally being larger than Blue crabs, and females typically having larger carapaces than males within each species.
+
+```{r}
+# Visualization: Histogram of the continuous variables
+hist(crabs$FL, main = "Histogram of Front Limb Length", xlab = "Front Limb Length", col='green', breaks = 15)
+```
+
+The majority of crabs have a front limb length between 16 and 18 units, with the distribution tapering off symmetrically on both sides. The data appears to be roughly normally distributed, with fewer crabs having extreme (either very short or very long) front limb lengths. This kind of distribution is common in biological measurements where most individuals tend to cluster around an average size, with fewer individuals at the extremes.
+
+------------------------------------------------------------------------
+
+### Exercise 2: Expected Value and Covariance Properties
+
+Let $\boldsymbol{X}$ and $\boldsymbol{Y}$ be $p$-variate random variables. Assume $\boldsymbol{a}$ and $\boldsymbol{b}$ are constant $p$-dimensional vectors, and $\boldsymbol{A}$ and $\boldsymbol{B}$ are constant matrices of appropriate dimensions. Set $\mathbb{E}(\boldsymbol{X})=\boldsymbol{\mu}$, $\mathbb{E}(\boldsymbol{Y})=\boldsymbol{\nu}$, and $\text{Var}(\boldsymbol{X})=\boldsymbol{\Sigma}$.
+
+**1.** Demonstrate the following property:
+
+$$\text{Cov}(\boldsymbol{AX},\boldsymbol{BX})=\boldsymbol{A\Sigma B^\top}.$$
+
+**2.** Using the `crabs` dataset from the previous exercise and assigning values to $\boldsymbol{a}$, $\boldsymbol{b}$, $\boldsymbol{A}$ and $\boldsymbol{B}$, design examples that illustrate the following properties:
+
+**Notes:** Consider $p=5$, using the numerical variables of your dataset.
+
+Clearly state your chosen values for $\boldsymbol{a}$, $\boldsymbol{b}$, $\boldsymbol{A}$ and $\boldsymbol{B}$.
+
+Matrix multiplication in `R` can be done using the `%*%` operator.
+
+```{r}
+library(MASS)
+data("crabs")
+
+X <- as.matrix(crabs[, 4:8])
+
+# Mean vector (mu) and Covariance matrix (Sigma)
+mu <- colMeans(X)
+Sigma <- cov(X)
+
+# Define vectors a and b, and matrices A and B
+a <- c(1, 0.5, -0.5, 1.5, -1)
+b <- c(0.5, -0.5, 1, 1, -1)
+
+A <- matrix(
+  c(1, 0, 0.5, -0.5, 1,
+    0.5, 1, 0, 1.5, 0,
+    1.5, 0.5, -1, 0, 1,
+    -0.5, 1, 0, 0.5, -1,
+    1, -0.5, 1, -1, 0.5),
+  nrow = 5, byrow = TRUE)
+
+B <- matrix(
+  c(0.5, -1, 0.5, 1, 0.5,
+    -1, 0.5, -0.5, 1, -0.5,
+    1, -0.5, 0.5, -1, 0,
+    0.5, 0, -1, 1, 0.5,
+    0, 1, -1, 0.5, -0.5),
+  nrow = 5, byrow = TRUE)
+```
+
+**(a)** $\mathbb{E}(\boldsymbol{a}^\top\boldsymbol{X})=\boldsymbol{a}^\top\boldsymbol{\mu}$
+```{r}
+t(a) %*% colMeans(X)
+t(a) %*% colMeans(X) == t(a) %*% mu
+```
+
+**(b)** $\text{Var}(\boldsymbol{a}^\top\boldsymbol{X})=\boldsymbol{a}^\top\boldsymbol{\Sigma}\boldsymbol{a}$
+
+```{r}
+# Variance of aT X
+t(a) %*% Sigma %*% a
+```
+
+**(c)** $\text{Cov}(\boldsymbol{a^\top X},\boldsymbol{b^\top X})=\boldsymbol{a^\top\Sigma b}$
+
+```{r}
+t(a) %*% Sigma %*% b
+```
+
+**(d)** $\text{Cor}(\boldsymbol{a^\top X},\boldsymbol{b^\top X})=\frac{\boldsymbol{a^\top\Sigma b}}{\sqrt{(\boldsymbol{a^\top\Sigma a})(\boldsymbol{b^\top\Sigma b})}}$
+
+```{r}
+cov_aXb <- cov(X %*% a, X %*% b)
+cov_aXb
+t(a) %*% Sigma %*% b
+```
+
+**(e)** $\mathbb{E}(\boldsymbol{AX+b})=\boldsymbol{A\mu+b}$
+
+```{r}
+cov_aXb / sqrt((t(a) %*% Sigma %*% a) * (t(b) %*% Sigma %*% b))
+```
+
+**(f)** $\text{Var}(\boldsymbol{AX})=\boldsymbol{A\Sigma A}^\top$
+
+```{r}
+var_AX <- A %*% Sigma %*% t(A)
+```
+
+**(g)** $\text{Cov}(\boldsymbol{X},\boldsymbol{Y})=\mathbb{E}((\boldsymbol{X-\mu})(\boldsymbol{Y-\nu})^\top)=\mathbb{E}(\boldsymbol{XY}^\top)-\boldsymbol{\mu\nu}^\top$
+
+```{r}
+Y <- as.matrix(crabs[, 4:8])
+
+# Mean vector for Y
+nu <- colMeans(Y)
+
+# Covariance between X and Y
+cov_XY <- cov(X, Y)
+cov_XY_alternative <- (t(X) %*% Y) - mu %*% t(nu)
+
+# Both should give similar results
+cov_XY
+cov_XY_alternative
+```
+
+**(h)** $\text{Cov}(\boldsymbol{X},\boldsymbol{Y})=\text{Cov}(\boldsymbol{Y},\boldsymbol{X})^\top$
+
+```{r}
+# Covariance of Y and X
+cov_YX <- cov(Y, X)
+
+# Check if cov(X, Y) equals cov(Y, X)'s transpose
+cov_YX_T <- t(cov_YX)
+all.equal(cov_XY, cov_YX_T)
+```
+
+**(i)** $\text{Cov}(\boldsymbol{X}_1+\boldsymbol{X}_2,\boldsymbol{Y})=\text{Cov}(\boldsymbol{X}_1,\boldsymbol{Y})+\text{Cov}(\boldsymbol{X}_2,\boldsymbol{Y})$
+
+```{r}
+X1 <- X[, 1:3]
+X2 <- X[, 3:5]
+
+cov_X1_X2_Y <- cov(X1 + X2, Y)
+
+cov_X1_Y <- cov(X1, Y)
+cov_X2_Y <- cov(X2, Y)
+
+cov_X1_X2_Y == (cov_X1_Y + cov_X2_Y)
+```
+
+**(j)** $\text{Var}(\boldsymbol{X+Y})=\text{Var}(\boldsymbol{X})+\text{Var}(\boldsymbol{Y})+\text{Cov}(\boldsymbol{X},\boldsymbol{Y})+\text{Cov}(\boldsymbol{Y},\boldsymbol{X})$
+
+```{r}
+var_X_Y <- var(X + Y)
+
+var_X <- var(X)
+var_Y <- var(Y)
+cov_XY <- cov(X, Y)
+cov_YX <- cov(Y, X)
+
+var_X_Y == (var_X + var_Y + cov_XY + cov_YX)
+```
+
+**(k)** $\text{Cov}(\boldsymbol{AX},\boldsymbol{BX})=\boldsymbol{A\Sigma B^\top}$
+
+```{r}
+cov_AX_BX <- A %*% Sigma %*% t(B)
+cov_AX_BX
+```
+
+**(l)** $\text{Cov}(\boldsymbol{AX},\boldsymbol{BY})=\boldsymbol{A}\text{Cov}(\boldsymbol{X},\boldsymbol{Y})\boldsymbol{B}^\top$
+
+```{r}
+cov_AX_BY <- A %*% cov(X, Y) %*% t(B)
+cov_AX_BY
+```
